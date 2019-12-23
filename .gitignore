@@ -1,0 +1,6 @@
+.env
+/.idea/
+/logs/
+/alembic/
+/alembic.ini
+/dev/
