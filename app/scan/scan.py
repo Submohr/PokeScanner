@@ -11,23 +11,24 @@ default_thresh = 140
 
 # this class just exists to OCR.  little to no logic in here.
 
-def scan_box_from_path(path: str, coords: List[int], thresh: int = default_thresh) -> \
+def scan_box_from_path(path: str, coords: List[int], thresh: int = default_thresh, scan_type: str = "DEFAULT") -> \
         Dict[str, Union[int, pandas.DataFrame]]:
     img = Image.open(path)
-    return scan_box(img, coords, thresh=thresh)
+    return scan_box(img, coords, thresh=thresh, scan_type=scan_type)
 
 
-def scan_box(img: Image, coords: List[int], thresh: int = default_thresh) -> Dict[str, Union[int, pandas.DataFrame]]:
+def scan_box(img: Image, coords: List[int], thresh: int = default_thresh, scan_type: str = "DEFAULT") -> Dict[
+    str, Union[int, pandas.DataFrame]]:
     box_img = img.crop((coords[0], coords[1], coords[2], coords[3]))
-    return scan(box_img, thresh=thresh)
+    return scan(box_img, thresh=thresh, scan_type=scan_type)
 
 
-def scan_from_path(path: str, thresh: int = default_thresh) -> Dict[str, Union[int, pandas.DataFrame]]:
+def scan_from_path(path: str, thresh: int = default_thresh, scan_type: str = "DEFAULT") -> Dict[str, Union[int, pandas.DataFrame]]:
     img = Image.open(path)
-    return scan(img, thresh=thresh)
+    return scan(img, thresh=thresh, scan_type=scan_type)
 
 
-def scan(img: Image, thresh: int = default_thresh) -> Dict[str, Union[int, pandas.DataFrame]]:
+def scan(img: Image, thresh: int = default_thresh, scan_type: str = "DEFAULT") -> Dict[str, Union[int, pandas.DataFrame]]:
     try:
         def fn(x):
             if x > thresh:
@@ -35,8 +36,15 @@ def scan(img: Image, thresh: int = default_thresh) -> Dict[str, Union[int, panda
             return 0
 
         converted_img = img.convert('L').point(fn, mode='1')
-        data = pytesseract.image_to_data(converted_img, output_type='data.frame',
-                                         config=Config.TESSDATA_DIR_CONFIG)
+        if scan_type is "WORDS":
+            data = pytesseract.image_to_data(converted_img, output_type='data.frame',
+                                             config=Config.TESSDATA_CONFIG_NAME)
+        elif scan_type is "NUMBERS":
+            data = pytesseract.image_to_data(converted_img, output_type='data.frame',
+                                             config=Config.TESSDATA_CONFIG_NUMBERS)
+        else:
+            data = pytesseract.image_to_data(converted_img, output_type='data.frame',
+                                             config=Config.TESSDATA_CONFIG_DEFAULT)
         data = data[data.conf != -1]
         return {'code': 0, 'data': data}
     except Exception as e:

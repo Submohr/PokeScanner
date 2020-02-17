@@ -41,35 +41,37 @@ class Screenshot(object):
             pass
 
         try:
-            if 'LUCKY' == self.get_data('lucky')['data']['text'].str.cat(sep=' '):
+            if 'LUCKY' == self.get_data('lucky', scan_type="WORDS")['data']['text'].str.cat(sep=' '):
                 self.lucky_offset = 50
                 self.lucky = True
         except:
             pass
 
         try:
-            name_df = self.get_data('name')['data']
+            name_df = self.get_data('name', scan_type="WORDS")['data']
             self.name_data = df_to_lists(name_df)
         except:
             pass
 
         try:
-            weight_df = self.get_data('weight')['data']
+            weight_df = self.get_data('weight', scan_type="NUMBERS")['data']
             self.weight_data = df_to_lists(weight_df)
         except:
             pass
 
         try:
-            height_df = self.get_data('height')['data']
+            height_df = self.get_data('height', scan_type="NUMBERS")['data']
             self.height_data = df_to_lists(height_df)
         except:
             pass
 
         try:
-            type_df = self.get_data('type')['data']
+            type_df = self.get_data('type', scan_type="WORDS")['data']
             self.type_data = df_to_lists(type_df)
         except:
             pass
+
+        self.image.close()
 
     def get_box(self, prop: str) -> List[int]:
         if prop in ['name', 'lucky']:
@@ -81,9 +83,12 @@ class Screenshot(object):
             return ret
         raise Exception
 
-    def get_data(self, prop: str) -> Dict:
+    def get_data(self, prop: str, scan_type: str = "DEFAULT") -> Dict:
         if prop in self.props:
             box = self.get_box(prop)
             threshold = self.thresholds[prop]
-            return scan_box(self.image, box, thresh=threshold)
+            return scan_box(self.image, box, thresh=threshold, scan_type=scan_type)
         raise Exception
+
+    def __repr__(self):
+        return f"{self.image_path}, {self.name_data}, {self.weight_data}, {self.height_data}"

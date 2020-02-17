@@ -1014,16 +1014,17 @@ GALARIAN_SHORTFORMS = ["Gmeowth",
                        "Gstunfisk"]
 
 CASTFORM_NAMES = [
+    "Castform normal",
     "Castform fire",
-    "Castform water",
     "Castform ice",
-    "Castform normal"]
+    "Castform water"
+    ]
 
 CASTFORM_SHORTFORMS = [
+    "Castformn",
     "Castformf",
-    "Castformw",
     "Castformi",
-    "Castformn"]
+    "Castformw"]
 
 KNOWN_OCR_ERRORS = {
     "SheHder":"Shellder",
@@ -1047,8 +1048,11 @@ KNOWN_OCR_ERRORS = {
     "Farfetch":"Farfetch'd",
     "Shehos":"Shellos",
     "Nidorano7":"Nidoranm",
+    "Nidorano7'":"Nidoranm",
     "Nidoran 5?":"Nidoranf",
-    "Kangasknan":"Kangaskhan"
+    "Kangasknan":"Kangaskhan",
+    "Nidorano?i":"Nidoranm",
+    "Nidoran s?":"Nidoranf"
 }
 
 POKEMON_STATS = {

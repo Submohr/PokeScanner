@@ -3,6 +3,7 @@ from app.scan import Screenshot
 import re
 from typing import List, Dict
 from app.data import helpers as dhelp
+from config import Config
 
 type_regex = re.compile('[^a-zA-Z]')
 
@@ -22,12 +23,12 @@ def pokemon_from_screenshot(screenshot: Screenshot) -> Pokemon:
         types = handle_types(screenshot.type_data['text'])
     except:
         types = None
-
     try:
         names = screenshot.name_data['text']
         name = " ".join(names)
         name = handle_name(name, types)
     except:
+        Config.LOGGER.exception()
         name = None
 
     try:
@@ -55,8 +56,7 @@ def pokemon_from_screenshot(screenshot: Screenshot) -> Pokemon:
     except:
         height = None
         height_conf = -1
-
-    return Pokemon(name, weight, height, types)
+    return Pokemon(name, weight, height)
 
 
 def handle_types(types_list: List[str]) -> List[str]:

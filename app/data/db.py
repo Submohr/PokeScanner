@@ -5,6 +5,7 @@ from app.pokemon.Pokemon import Pokemon as logical_poke
 from datetime import datetime, timedelta
 from config import Config
 from sqlalchemy import func, Column, and_
+from sqlalchemy.sql.expression import desc
 
 
 def insert_pokemon(poke: logical_poke, source_type: str = None, source_id: str = None,
@@ -24,6 +25,7 @@ def insert_pokemon(poke: logical_poke, source_type: str = None, source_id: str =
             s.commit()
     except Exception as e:
         Config.LOGGER.exception("")
+        raise e
     finally:
         if commit:
             s.close()
@@ -68,15 +70,15 @@ def convert_db_to_logical_poke(poke: db_poke) -> logical_poke:
 
 def get_max_weight_by_name(name: str) -> int:
     # returns max weight for given pokemon; returns None if not found
-    ext = get_extreme_from_extreme_by_name(name, "WEIGHT", "MAX")
+    ext = get_extreme_from_extreme_by_name(name, "WEIGHT", "MAX", full=True)
     if ext:
         ts = ext.updated_timestamp
         ext_weight = ext.extreme_value
     else:
         ts = datetime.min
         ext_weight = -1
-    stat = get_extreme_from_stats_by_name(name, db_poke.weight, func.max, ts)
-    if stat >= ext_weight:
+    stat = get_extreme_from_stats_by_name(name, db_poke.weight, func.max, ts=ts)
+    if stat is not None and stat >= ext_weight:
         update_extreme(name, "WEIGHT", "MAX", (datetime.utcnow() - timedelta(days=1)), stat)
         ext_weight = stat
     return ext_weight
@@ -84,30 +86,30 @@ def get_max_weight_by_name(name: str) -> int:
 
 
 def get_min_weight_by_name(name: str) -> int:
-    ext = get_extreme_from_extreme_by_name(name, "WEIGHT", "MIN")
+    ext = get_extreme_from_extreme_by_name(name, "WEIGHT", "MIN", full=True)
     if ext:
         ts = ext.updated_timestamp
         ext_weight = ext.extreme_value
     else:
         ts = datetime.min
         ext_weight = 1000000000
-    stat = get_extreme_from_stats_by_name(name, db_poke.weight, func.min, ts)
-    if stat <= ext_weight:
+    stat = get_extreme_from_stats_by_name(name, db_poke.weight, func.min, ts=ts)
+    if stat is not None and stat <= ext_weight:
         update_extreme(name, "WEIGHT", "MIN", (datetime.utcnow() - timedelta(days=1)), stat)
         ext_weight = stat
     return ext_weight
 
 
 def get_max_height_by_name(name: str) -> int:
-    ext = get_extreme_from_extreme_by_name(name, "HEIGHT", "MAX")
+    ext = get_extreme_from_extreme_by_name(name, "HEIGHT", "MAX", full=True)
     if ext:
         ts = ext.updated_timestamp
         ext_height = ext.extreme_value
     else:
         ts = datetime.min
         ext_height = -1
-    stat = get_extreme_from_stats_by_name(name, db_poke.height, func.max, ts)
-    if stat >= ext_height:
+    stat = get_extreme_from_stats_by_name(name, db_poke.height, func.max, ts=ts)
+    if stat is not None and stat >= ext_height:
         update_extreme(name, "HEIGHT", "MAX", (datetime.utcnow() - timedelta(days=1)), stat)
         ext_height = stat
     return ext_height
@@ -115,25 +117,28 @@ def get_max_height_by_name(name: str) -> int:
 
 
 def get_min_height_by_name(name: str) -> int:
-    ext = get_extreme_from_extreme_by_name(name, "HEIGHT", "MIN")
+    ext = get_extreme_from_extreme_by_name(name, "HEIGHT", "MIN", full=True)
     if ext:
         ts = ext.updated_timestamp
         ext_height = ext.extreme_value
     else:
         ts = datetime.min
         ext_height = 1000000000
-    stat = get_extreme_from_stats_by_name(name, db_poke.height, func.min, ts)
-    if stat <= ext_height:
+    stat = get_extreme_from_stats_by_name(name, db_poke.height, func.min, ts=ts)
+    if stat is not None and stat <= ext_height:
         update_extreme(name, "HEIGHT", "MIN", (datetime.utcnow() - timedelta(days=1)), stat)
         ext_height = stat
     return ext_height
     # return get_extreme_by_name(name, db_poke.height, func.min)
 
 
-def get_extreme_from_extreme_by_name(name: str, col: str, minmax: str) -> int:
+def get_extreme_from_extreme_by_name(name: str, col: str, minmax: str, full=False) -> int:
     try:
         s = Session()
-        query = s.query(Pokemon_Extreme).filter_by(name=name, extreme_type=minmax, extreme_column=col)
+        if full:
+            query = s.query(Pokemon_Extreme).filter_by(name=name, extreme_type=minmax, extreme_column=col)
+        else:
+            query = s.query(Pokemon_Extreme.extreme_value).filter_by(name=name, extreme_type=minmax, extreme_column=col)
     except Exception as e:
         Config.LOGGER.exception("")
     finally:
@@ -150,3 +155,14 @@ def get_extreme_from_stats_by_name(name: str, col, func, ts=datetime.min) -> int
     finally:
         s.close()
     return query.first()[0]
+
+
+def get_extreme_last_updated_ts(name:str) -> str:
+    try:
+        s = Session()
+        query = s.query(Pokemon_Extreme).filter_by(name=name).order_by(desc('updated_timestamp'))
+    except Exception as e:
+        Config.LOGGER.exception("")
+    finally:
+        s.close()
+    return query.first().updated_timestamp

@@ -47,9 +47,7 @@ def height_str_to_int(height: str) -> int:
 def str_to_int(c: str) -> int:
     if c.rfind('.') > 0:
         base = int(c[:c.rfind('.')]) * 100
-        right = int(c[c.rfind('.') + 1:])
-        if right < 10:
-            right = right * 10
+        right = int(f"{c[c.rfind('.') + 1:]:0<2}")
         return base + right
     return int(c) * 100
 
