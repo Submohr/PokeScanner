@@ -36,10 +36,10 @@ def scan(img: Image, thresh: int = default_thresh, scan_type: str = "DEFAULT") -
             return 0
 
         converted_img = img.convert('L').point(fn, mode='1')
-        if scan_type is "WORDS":
+        if scan_type == "WORDS":
             data = pytesseract.image_to_data(converted_img, output_type='data.frame',
                                              config=Config.TESSDATA_CONFIG_NAME)
-        elif scan_type is "NUMBERS":
+        elif scan_type == "NUMBERS":
             data = pytesseract.image_to_data(converted_img, output_type='data.frame',
                                              config=Config.TESSDATA_CONFIG_NUMBERS)
         else:
